@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 function SplitScreen() {
     const [leftWidth, setLeftWidth] = useState(50);
     const isDragging = useRef(false);
-    const spliScreenContRef = useRef(null);
+    const splitScreenContRef = useRef(null);
     console.log('the component re-rendered!');
 
     const startResize = (e) => {
@@ -20,9 +20,9 @@ function SplitScreen() {
 
         // handle mouse move event
         const handleMouseMove = (e) => {
-            if(!isDragging.current || !spliScreenContRef) return;
+            if(!isDragging.current || !splitScreenContRef) return;
 
-            const spliScreenContRect = spliScreenContRef.current.getBoundingClientRect();
+            const spliScreenContRect = splitScreenContRef.current.getBoundingClientRect();
             const newLeftWidthPx = e.clientX - spliScreenContRect.left;
             const newLeftWidthPercentage = (newLeftWidthPx / spliScreenContRect.width) * 100;
 
@@ -53,13 +53,11 @@ function SplitScreen() {
     []);
 
     return (
-        <div className="splitScreen-cont" ref={spliScreenContRef}>
+        <div className="splitScreen-cont" ref={splitScreenContRef}>
             <div className="split-cont">
 
                 {/* left split box */}
-                <div className='split-left-cont'
-                    style={{width: `${leftWidth}%`}}
-                >
+                <div className='split-left-cont' style={{width: `${leftWidth}%`}}>
                     {<Whiteboard />}
                 </div>
 
@@ -73,9 +71,7 @@ function SplitScreen() {
                 ></div>
 
                 {/* right split box */}
-                <div className='split-right-cont'
-                    style={{width: `${100 - leftWidth}%`}}
-                >
+                <div className='split-right-cont' style={{width: `${100 - leftWidth}%`}}>
                     {<CodeEditor />}
                 </div>
             </div>
