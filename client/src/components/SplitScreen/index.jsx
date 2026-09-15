@@ -58,7 +58,7 @@ function SplitScreen() {
 
                 {/* left split box */}
                 <div className='split-left-cont' style={{width: `${leftWidth}%`}}>
-                    {<Whiteboard />}
+                    {<Whiteboard leftWidth={leftWidth} />}
                 </div>
 
                 {/* screen divider */}
