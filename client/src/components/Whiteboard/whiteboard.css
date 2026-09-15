@@ -2,4 +2,46 @@
 .whiteboardCont {
     width: 100%;
     height: 100%;
+    padding: 10px;
+}
+
+.toolsBtnCont {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.toolBtn {
+    padding: 6px 12px;
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    text-transform: capitalize;
+    transition: background-color 0.3s;
+}
+
+.changeColorInp-clearBtn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.colorInp {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    width: 30px;
+    margin-right: 20px;
+}
+
+.changeColorInp-clearBtn > button {
+    color: #fff;
+    background-color: #e51400;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 2px;
+    cursor: pointer;
 }

@@ -27,11 +27,9 @@ function SplitScreen() {
             const newLeftWidthPercentage = (newLeftWidthPx / spliScreenContRect.width) * 100;
 
             // Constrain layout dimensions (min 20%, max 80%)
-            if(newLeftWidthPercentage >= 20 && newLeftWidthPercentage <= 80) {
+            if((newLeftWidthPercentage >= 20 && newLeftWidthPercentage <= 80)) {
                 setLeftWidth(newLeftWidthPercentage);
             }
-
-
         }
 
         const handleMouseUp = () => {
