@@ -8,7 +8,7 @@ function Whiteboard({leftWidth}) {
     const [tool, setTool] = useState('line');
     const [color, setColor] = useState('#ffffff');
 
-    const whiteboardContRef = useRef(null);
+    const canvasContRef = useRef(null);
     const isDrawing = useRef(false);
 
     const handleMouseDown = (e) => {
@@ -69,7 +69,7 @@ function Whiteboard({leftWidth}) {
         const pos = e.target.getStage().getPointerPosition();
         const updatedShapes = [...shapes];
         const targetShape = updatedShapes[updatedShapes.length - 1];
-        
+
         if(!targetShape) return;
 
         if(targetShape.type === 'line' && tool === 'line') {
@@ -87,15 +87,15 @@ function Whiteboard({leftWidth}) {
     }
 
     useEffect(() => {
-        if(!whiteboardContRef) return;
+        if(!canvasContRef) return;
         setBoardDimension({
-            width: whiteboardContRef.current.clientWidth - 20,
-            height: whiteboardContRef.current.clientHeight
+            width: canvasContRef.current.clientWidth,
+            height: canvasContRef.current.clientHeight
         });
     }, [leftWidth]);
 
     return (
-        <div className="whiteboardCont" ref={whiteboardContRef}>
+        <div className="whiteboardCont">
             <div className="toolsBtnCont">
                 {
                     ['line', 'rect', 'circle', 'text'].map(t => (
@@ -115,64 +115,68 @@ function Whiteboard({leftWidth}) {
                 />
                 <button onClick={() => setShapes([])}>Clear Canvas</button>
             </div>
-            {whiteboardContRef.current && 
-                <Stage 
-                    width={boardDimension.width} 
-                    height={boardDimension.height}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={() => {isDrawing.current = false}}
-                    // onMouseLeave={() => {isDrawing.current = false}}
-                >
-                    <Layer>
-                        {
-                            shapes.map(shape => {
-                                if(shape.type === 'line') {
-                                    return <Line 
-                                        key={shape.id}
-                                        points={shape.points}
-                                        stroke={shape.color}
-                                        strokeWidth={shape.strokeWidth}
-                                        tension={0.5}
-                                        lineCap="round"
-                                        lineJoin="round"
-                                    />
-                                } else if(shape.type === 'rect') {
-                                    return <Rect 
-                                        key={shape.id}
-                                        x={shape.x}
-                                        y={shape.y}
-                                        width={shape.width}
-                                        height={shape.height}
-                                        stroke={shape.color}
-                                        strokeWidth={3}
-                                    />
-                                } else if(shape.type === 'circle') {
-                                    return <Circle 
-                                        key={shape.id}
-                                        x={shape.x}
-                                        y={shape.y}
-                                        width={shape.width}
-                                        height={shape.height}
-                                        radius={shape.radius}
-                                        stroke={shape.color}
-                                    />
-                                } else if(shape.type === 'text') {
-                                    return <Text 
-                                        key={shape.id}
-                                        x={shape.x}
-                                        y={shape.y}
-                                        text={shape.text}
-                                        fill={shape.color}
-                                        fontSize={20}
-                                    />
-                                }
-                                return null;
-                            })
-                        }
-                    </Layer>
-                </Stage>
-            }
+
+            <div className="canvasCont" ref={canvasContRef}>
+                {
+                    canvasContRef.current && 
+                    <Stage 
+                        width={boardDimension.width} 
+                        height={boardDimension.height}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={() => {isDrawing.current = false}}
+                        // onMouseLeave={() => {isDrawing.current = false}}
+                    >
+                        <Layer>
+                            {
+                                shapes.map(shape => {
+                                    if(shape.type === 'line') {
+                                        return <Line 
+                                            key={shape.id}
+                                            points={shape.points}
+                                            stroke={shape.color}
+                                            strokeWidth={shape.strokeWidth}
+                                            tension={0.5}
+                                            lineCap="round"
+                                            lineJoin="round"
+                                        />
+                                    } else if(shape.type === 'rect') {
+                                        return <Rect 
+                                            key={shape.id}
+                                            x={shape.x}
+                                            y={shape.y}
+                                            width={shape.width}
+                                            height={shape.height}
+                                            stroke={shape.color}
+                                            strokeWidth={3}
+                                        />
+                                    } else if(shape.type === 'circle') {
+                                        return <Circle 
+                                            key={shape.id}
+                                            x={shape.x}
+                                            y={shape.y}
+                                            width={shape.width}
+                                            height={shape.height}
+                                            radius={shape.radius}
+                                            stroke={shape.color}
+                                        />
+                                    } else if(shape.type === 'text') {
+                                        return <Text 
+                                            key={shape.id}
+                                            x={shape.x}
+                                            y={shape.y}
+                                            text={shape.text}
+                                            fill={shape.color}
+                                            fontSize={20}
+                                        />
+                                    }
+                                    return null;
+                                })
+                            }
+                        </Layer>
+                    </Stage>
+                }
+            </div>
         </div>
     )
 }
