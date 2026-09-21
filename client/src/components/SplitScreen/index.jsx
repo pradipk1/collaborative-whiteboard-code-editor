@@ -4,11 +4,11 @@ import CodeEditor from './../CodeEditor';
 import './splitScreen.css';
 import { useEffect, useRef, useState } from 'react';
 
-function SplitScreen() {
+function SplitScreen({socket}) {
     const [leftWidth, setLeftWidth] = useState(50);
     const isDragging = useRef(false);
     const splitScreenContRef = useRef(null);
-    console.log('the component re-rendered!');
+    // console.log('the component re-rendered!');
 
     const startResize = (e) => {
         isDragging.current = true;
@@ -56,7 +56,7 @@ function SplitScreen() {
 
                 {/* left split box */}
                 <div className='split-left-cont' style={{width: `${leftWidth}%`}}>
-                    {<Whiteboard leftWidth={leftWidth} />}
+                    {<Whiteboard leftWidth={leftWidth} socket={socket} />}
                 </div>
 
                 {/* screen divider */}

@@ -13,11 +13,15 @@ function Home() {
             username: 'pradip',
             roomId: 101
         });
-    }, []);
+
+        return () => {
+            socket.disconnect();
+        }
+    }, [socket]);
 
     return (
         <div className="home-main-cont">
-            {<SplitScreen />}
+            {<SplitScreen socket={socket} />}
         </div>
     )
 }

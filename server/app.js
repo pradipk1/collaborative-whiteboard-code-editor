@@ -8,6 +8,9 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
+// A map to hold memory-cached Yjs Docs per room on the server
+const docs = new Map();
+
 // making a socket connection with the client
 const io = new Server(server, {
     cors: {
@@ -29,10 +32,10 @@ io.on('connection', socket => {
         console.log(`User ${username} joined the room: ${roomId}`);
 
         // notify other team members in that room only
-        socket.to(roomId).emit('user-joined', {
-            message: `${username} has joined the collaboration session`,
-            username: username
-        });
+        // socket.to(roomId).emit('user-joined', {
+        //     message: `${username} has joined the collaboration session`,
+        //     username: username
+        // });
     });
 
     // handle synchronized collaboration change
