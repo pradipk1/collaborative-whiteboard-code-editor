@@ -2,7 +2,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-
+const Y = require('yjs');
 
 
 const app = express();
@@ -31,6 +31,28 @@ io.on('connection', socket => {
         socket.join(roomId);
         console.log(`User ${username} joined the room: ${roomId}`);
 
+        socket.data.username = username;
+        socket.data.roomId = roomId;
+        console.log(socket.data)
+
+        // Initialize or retrieve the server-side Y.Doc for this room
+        if (!docs.has(roomId)) {
+            const doc = new Y.Doc();
+            docs.set(roomId, doc);
+        }
+
+        const doc = docs.get(roomId)
+
+        // Send the current server document state matrix back to the joining client
+        const currentDocState = Y.encodeStateAsUpdate(doc);
+        socket.emit('init-doc-state', currentDocState);
+
+        // Pipe Awareness API events (cursors/presence) to other room members
+        // socket.on('awareness-update', (awarenessUpdate) => {
+        //     socket.to(roomId).emit('awareness-update', awarenessUpdate);
+        // });
+
+
         // notify other team members in that room only
         // socket.to(roomId).emit('user-joined', {
         //     message: `${username} has joined the collaboration session`,
@@ -38,26 +60,49 @@ io.on('connection', socket => {
         // });
     });
 
-    // handle synchronized collaboration change
-    socket.on('send-collaboration-update', data => {
-        const { roomId, content } = data;
+    // Handle incoming visual/structural updates to the Yjs Canvas document
+    socket.on('canvas-update', ({roomId, update}) => {
+        if(!roomId || !update) return;
+        
+        const doc = docs.get(roomId);
+        Y.applyUpdate(doc, new Uint8Array(update));
 
-        // broadcast the update only to the specific room, excluding the sender
-        socket.to(roomId).emit('receive-collaboration-update', content);
+        // Broadcast mutation frame to all other users in the room
+        socket.to(roomId).emit('canvas-update', update);
     });
+
+    // Clean up cache if room is completely empty
+    // socket.on('disconnect', () => {
+    //     console.log(socket.data.username, 'got disconnected');
+    //     // const room = io.sockets.adapter.rooms.get(roomId);
+    //     // if (!room || room.size === 0) {
+    //     //     docs.delete(roomId);
+    //     // }
+    // });
+
+
+    // // handle synchronized collaboration change
+    // socket.on('send-collaboration-update', data => {
+    //     const { roomId, content } = data;
+
+    //     // broadcast the update only to the specific room, excluding the sender
+    //     socket.to(roomId).emit('receive-collaboration-update', content);
+    // });
+
+    
 
     // Event: cleanup when a user leaves or closes the browser
-    socket.on('disconnecting', () => {
-        socket.rooms.forEach(room => {
+    // socket.on('disconnecting', () => {
+    //     socket.rooms.forEach(room => {
 
-            // A socket can be in multiple rooms; we iterate over them
-            if(room !== socket.id) { // Exclude the socket's private room id
-                socket.to(room).emit('user-left', {
-                    message: 'A team member is disconnected'
-                });
-            }
-        });
-    });
+    //         // A socket can be in multiple rooms; we iterate over them
+    //         if(room !== socket.id) { // Exclude the socket's private room id
+    //             socket.to(room).emit('user-left', {
+    //                 message: 'A team member is disconnected'
+    //             });
+    //         }
+    //     });
+    // });
 
     // consoling a disconnect message after user left
     socket.on('disconnect', () => {

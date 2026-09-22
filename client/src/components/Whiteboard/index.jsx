@@ -6,7 +6,7 @@ import RenderShape from "./renderShape.jsx";
 
 import './whiteboard.css';
 
-function Whiteboard({leftWidth, socket}) {
+function Whiteboard({leftWidth, socket, username, roomId}) {
     const [shapes, setShapes] = useState([]);
     const [boardDimension, setBoardDimension] = useState(null);
     const [tool, setTool] = useState('line');
@@ -24,7 +24,6 @@ function Whiteboard({leftWidth, socket}) {
     // update the shapeMap doc whenever a new shape is drawn
     const updateYShapesMap = (id, shape) => {
         yShapesMap.set(id, JSON.stringify(shape));
-        // console.log(yShapesMap);
     }
 
     // handle mouseDown event inside canvas 
@@ -45,7 +44,6 @@ function Whiteboard({leftWidth, socket}) {
                 strokeWidth: 3,
                 createdAt
             }
-            setShapes([...shapes, newLine]);
             updateYShapesMap(newLine.id, newLine);
         } else if(tool === 'rect') {
             const newRect = {
@@ -58,7 +56,6 @@ function Whiteboard({leftWidth, socket}) {
                 color,
                 createdAt
             }
-            setShapes([...shapes, newRect]);
             updateYShapesMap(newRect.id, newRect);
         } else if(tool === 'circle') {
             const newCircle = {
@@ -70,7 +67,6 @@ function Whiteboard({leftWidth, socket}) {
                 color,
                 createdAt
             }
-            setShapes([...shapes, newCircle]);
             updateYShapesMap(newCircle.id, newCircle);
         } else if(tool === 'text') {
             const textVal = prompt('Enter your text');
@@ -84,7 +80,6 @@ function Whiteboard({leftWidth, socket}) {
                 color,
                 createdAt
             }
-            setShapes([...shapes, newText]);
             updateYShapesMap(newText.id, newText);
             isDrawing.current = false;
         }
@@ -98,10 +93,6 @@ function Whiteboard({leftWidth, socket}) {
         if(!lastShape) return;
 
         const pos = e.target.getStage().getPointerPosition();
-        // const updatedShapes = [...shapes];
-        // const lastShape = updatedShapes[updatedShapes.length - 1];
-
-        // if(!lastShape) return;
 
         if(lastShape.type === 'line' && tool === 'line') {
             lastShape.points = lastShape.points.concat([pos.x, pos.y]);
@@ -117,8 +108,6 @@ function Whiteboard({leftWidth, socket}) {
         }
 
         updateYShapesMap(lastShape.id, lastShape);
-
-        // setShapes(updatedShapes);
     }
 
     // handle mouse up event inside canvas
@@ -130,7 +119,7 @@ function Whiteboard({leftWidth, socket}) {
     // copy all shapes from yShapesMap to shapes state to render on UI
     useEffect(() => {
         const updateShapes = () => {
-             const shapesList = [];
+            const shapesList = [];
             yShapesMap.forEach(v => {
                 shapesList.push(JSON.parse(v));
             });
@@ -143,7 +132,7 @@ function Whiteboard({leftWidth, socket}) {
          yShapesMap.observe(updateShapes);
 
         return () => {yShapesMap.unobserve(updateShapes)}
-    }, [yShapesMap]);
+    }, []);
 
     // set the canvas width and height
     useEffect(() => {
@@ -154,104 +143,37 @@ function Whiteboard({leftWidth, socket}) {
         });
     }, [leftWidth]);
 
-    useEffect((e) => {
+    // initialize yDoc
+    useEffect(() => {
         const doc = yDocRef.current;
-
-        // Establish the Awareness instance bound to this doc
-        const awareness = new awarenessProtocol.Awareness(yDocRef.current);
-        awarenessRef.current = awareness;
 
         // Initialize document structural data from server
         socket.on('init-doc-state', initialState => {
             Y.applyUpdate(doc, new Uint8Array(initialState));
         });
+    }, [socket, roomId]);
 
-        // Receive document synchronization data fragments from other peers
-        socket.on('canvas-update', update => {
-            Y.applyUpdate(doc, Uint8Array(update));
-        });
+    // send local yjs doc update
+    useEffect(() => {
+        const sendUpdate = (update, origin) => {
+            if(origin === 'remote') return;
 
-        // Receive awareness delta frames from other peers
-        socket.on('awareness-update', awarenessUpdate => {
-            awarenessProtocol.applyAwarenessUpdate(awarenessRef.current, new Uint8Array(awarenessUpdate), socket);
-        });
-
-        // Emit local canvas edits to backend server
-        doc.on('update', (update, origin) => {
-            if(origin !== socket) { // Prevent circular echo loops
-                socket.emit('canvas-update', update);
-            }
-        });
-
-        // Emit local awareness modifications (such as moving the mouse)
-        awareness.on('update', ({added, updated, removed}, origin) => {
-            if(origin !== socket) {
-                const awarenessUpdate = awarenessProtocol.encodeAwarenessUpdate(awareness, [...added, ...updated, ...removed]);
-                socket.emit('awareness-update', awarenessUpdate);
-            }
-        });
-
-        // Read incoming state updates to refresh local UI components
-        const handleAwarenessChange = () => {
-            const states = awareness.getStates();
-            const usersMap = {};
-
-            states.forEach((state, clientID) => {
-                if(clientID === awareness.clientID) return // ignore self
-
-                if(state.user && state.user.cursor) {
-                    usersMap[clientID] = {
-                        name: state.user.name,
-                        color: state.user.color,
-                        x: state.user.cursor.x,
-                        y: state.user.cursor.y
-                    }
-                }
-            });
-            setRemoteUsers(usersMap);
+            socket.emit('canvas-update', {roomId, update});
         }
 
-        awareness.on('change', handleAwarenessChange);
+        yDocRef.current.on('update', sendUpdate);
 
-        // Set initial configuration parameters for local user context profile
-        awareness.setLocalStateField('user', {name: 'pradip', color: 'red', cursor: null});
+        return () => yDocRef.current.off('update', sendUpdate);
+    }, [roomId, socket, yDocRef.current]);
 
-        // yDocRef.current.on('update', (u, o) => {console.log(u, o)})
-
-        return () => {
-            doc.destroy();
+    // receive yjs doc update
+    useEffect(() => {
+        const receiveUpdate = (update) => {
+            Y.applyUpdate(yDocRef.current, new Uint8Array(update), 'remote');
         }
-    }, []);
 
-    // Request Animation Frame (rAF) throttle for rendering performance optimization
-  let isMoving = false;
-  const handleMouseMoveCursor = (e) => {
-    if (isMoving || !awarenessRef.current) return;
-    isMoving = true;
-
-    requestAnimationFrame(() => {
-      const stage = e.target.getStage();
-      const pointerPosition = stage.getPointerPosition();
-
-      if (pointerPosition) {
-        const currentUser = awarenessRef.current.getLocalState()?.user || {};
-        awarenessRef.current.setLocalStateField('user', {
-          ...currentUser,
-          cursor: { x: pointerPosition.x, y: pointerPosition.y },
-        });
-      }
-      isMoving = false;
-    });
-  };
-
-  const handleMouseLeave = () => {
-    if (!awarenessRef.current) return;
-    const currentUser = awarenessRef.current.getLocalState()?.user || {};
-    awarenessRef.current.setLocalStateField('user', {
-      ...currentUser,
-      cursor: null, // Wipe element bounds to hide indicator offscreen
-    });
-  };
+        socket.on('canvas-update', receiveUpdate);
+    }, [yDocRef.current, socket]);
 
     return (
         <div className="whiteboardCont">
@@ -272,10 +194,10 @@ function Whiteboard({leftWidth, socket}) {
                     className="colorInp"
                     onChange={(e) => {setColor(e.target.value)}}
                 />
-                <button onClick={() => setShapes([])}>Clear Canvas</button>
+                <button onClick={() => {yShapesMap.clear()}}>Clear Canvas</button>
             </div>
 
-            <div className="canvasCont" ref={canvasContRef} onMouseLeave={handleMouseLeave}>
+            <div className="canvasCont" ref={canvasContRef}>
                 {
                     canvasContRef.current && 
                     <Stage 
@@ -284,10 +206,8 @@ function Whiteboard({leftWidth, socket}) {
                         onMouseDown={handleMouseDown}
                         onMouseMove={(e) => {
                             handleMouseMove(e);
-                            handleMouseMoveCursor(e);
                         }}
                         onMouseUp={handleMouseUp}
-                        // onMouseLeave={() => {isDrawing.current = false}}
                     >
                         <Layer>
                             {/* render all the shapes */}
