@@ -143,16 +143,6 @@ function Whiteboard({leftWidth, socket, username, roomId}) {
         });
     }, [leftWidth]);
 
-    // initialize yDoc
-    useEffect(() => {
-        const doc = yDocRef.current;
-
-        // Initialize document structural data from server
-        socket.on('init-doc-state', initialState => {
-            Y.applyUpdate(doc, new Uint8Array(initialState));
-        });
-    }, [socket, roomId]);
-
     // send local yjs doc update
     useEffect(() => {
         const sendUpdate = (update, origin) => {
@@ -172,7 +162,14 @@ function Whiteboard({leftWidth, socket, username, roomId}) {
             Y.applyUpdate(yDocRef.current, new Uint8Array(update), 'remote');
         }
 
+        socket.on('init-doc-state', receiveUpdate);
+
         socket.on('canvas-update', receiveUpdate);
+
+        return () => {
+            socket.off('init-doc-state', receiveUpdate);
+            socket.off('canvas-update', receiveUpdate);
+        }
     }, [yDocRef.current, socket]);
 
     return (
