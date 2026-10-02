@@ -1,13 +1,21 @@
 
 import Home from './pages/Home'
 // import './App.css'
+// import { joinRoomContextProvider } from './context/joinRoomContext'
+import joinRoomContext from './context/joinRoomContext';
+import { useState } from 'react';
 
 function App() {
+  const [username, setUserName] = useState('');
+  const [roomId, setRoomId] = useState('');
+  const [isJoined, setIsJoined] = useState(false);
 
   return (
-    <div>
-      {<Home />}
-    </div>
+    <joinRoomContext.Provider value={{username, roomId, isJoined, setUserName, setRoomId, setIsJoined}}>
+      <div>
+        {<Home />}
+      </div>
+    </joinRoomContext.Provider>
   )
 }
 
