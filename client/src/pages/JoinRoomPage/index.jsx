@@ -1,9 +1,20 @@
 
 // import { useJoinRoomContext } from '../../context/joinRoomContext';
+import { useContext } from 'react';
+import joinRoomContext from '../../context/joinRoomContext';
 import './joinRoomPage.css';
 
 function JoinRoomPage() {
-  // const {username, roomId, isJoined, setUsername, setRoomId, setIsJoined} = useJoinRoomContext();
+  const {username, roomId, setUsername, setRoomId, setIsJoined} = useContext(joinRoomContext);
+
+  const handleJoinRoom = () => {
+    if(!username.trim() || !roomId.trim()) {
+      alert('Please Enter Your Name and Room ID');
+      return;
+    }
+    setIsJoined(true);
+  }
+
   return (
     <div className="join-page">
       <div className="join-card">
@@ -12,62 +23,25 @@ function JoinRoomPage() {
 
         <label>Your Name</label>
         <input
-          value={
-            name
-          }
-
-          onChange={
-            (event) =>
-              setName(
-                event.target.value
-              )
-          }
-
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           placeholder="Enter your name"
-
         />
 
-
-        <label>
-          Room ID
-        </label>
-
-
+        <label>Room ID</label>
         <input
-
-          // value={
-          //   roomId
-          // }
-
-          onChange={
-            (event) =>
-              setRoomId(
-                event.target.value
-              )
-          }
-
+          value={roomId}
+          onChange={e => setRoomId(e.target.value)}
           placeholder="demo-room"
-
         />
 
+        <button onClick={handleJoinRoom}>Join Room</button>
 
-        <button
-          type="button"
-          onClick={() => {
-            console.log("JOIN BUTTON CLICKED");
-            joinRoom();
-          }}
-        >
-          Join Room
-        </button>
-
-        <p>
-
-          {/* {connected
+        {/* <p>
+          {isJoined
               ? "🟢 Server Connected"
-              : "🔴 Connecting..."} */}
-
-        </p>
+              : "🔴 Connecting..."}
+        </p> */}
 
       </div>
 

@@ -4,31 +4,37 @@ import SplitScreen from './../../components/SplitScreen';
 import { useContext, useEffect } from 'react';
 import { useState } from 'react';
 import joinRoomContext from '../../context/joinRoomContext';
-// import JoinRoomPage from '../JoinRoomPage';
+import JoinRoomPage from '../JoinRoomPage';
 // import { useJoinRoomContext } from '../../context/joinRoomContext';
 
 function Home() {
-    const {username} = useContext(joinRoomContext);
-    console.log(username)
+    const {username, roomId, isJoined} = useContext(joinRoomContext);
+    // console.log(username)
     // const {} = useJoinRoomContext();
     // const [username, setUsername] = useState('');
-    const [roomId, setRoomId] = useState('');
+    // const [roomId, setRoomId] = useState('');
     // const [isJoined, setIsJoined] = useState(false);
 
     // make the connection with the server
     const socket = io('http://localhost:8000');
 
     useEffect(() => {
-        socket.emit('join-room', {
-            username: username,
-            roomId: roomId
-        });
-    }, [roomId]);
+        if(username && roomId) {
+            socket.emit('join-room', {
+                username: username,
+                roomId: roomId
+            });
+        }
+    }, [username, roomId]);
 
     return (
         <div className="home-main-cont">
-            {/* { !isJoined && <JoinRoomPage setUsername={setUsername} setRoomId={setRoomId} setIsJoined={setIsJoined} /> } */}
-            { <SplitScreen socket={socket} username={username} roomId={roomId} />}
+            {
+                !isJoined ? <JoinRoomPage /> : 
+                <SplitScreen socket={socket} username={username} roomId={roomId} />
+            }
+            {/* { !isJoined &&  } */}
+            {/* { } */}
         </div>
     )
 }
