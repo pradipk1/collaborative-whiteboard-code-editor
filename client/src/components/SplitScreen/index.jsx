@@ -4,12 +4,12 @@ import CodeEditor from './../CodeEditor';
 import './splitScreen.css';
 import { useEffect, useRef, useState } from 'react';
 
-function SplitScreen({socket, username, roomId}) {
+function SplitScreen({socket}) {
     const [leftWidth, setLeftWidth] = useState(50);
     const isDragging = useRef(false);
     const splitScreenContRef = useRef(null);
 
-    const startResize = (e) => {
+    const startResize = () => {
         isDragging.current = true;
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none'
@@ -46,8 +46,7 @@ function SplitScreen({socket, username, roomId}) {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp)
         }
-    },
-    []);
+    }, []);
 
     return (
         <div className="splitScreen-cont" ref={splitScreenContRef}>
@@ -55,7 +54,7 @@ function SplitScreen({socket, username, roomId}) {
 
                 {/* left split box */}
                 <div className='split-left-cont' style={{width: `${leftWidth}%`}}>
-                    {<Whiteboard leftWidth={leftWidth} socket={socket} username={username} roomId={roomId} />}
+                    {<Whiteboard leftWidth={leftWidth} socket={socket} />}
                 </div>
 
                 {/* screen divider */}

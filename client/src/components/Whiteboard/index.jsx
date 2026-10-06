@@ -1,17 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import {Stage, Layer, Line, Rect, Text, Circle} from 'react-konva';
+import { useContext, useEffect, useRef, useState } from "react";
+import {Stage, Layer} from 'react-konva';
 import * as Y from 'yjs';
-import * as awarenessProtocol from 'y-protocols/awareness.js'
 import RenderShape from "./renderShape.jsx";
 
 import './whiteboard.css';
+import joinRoomContext from "../../context/joinRoomContext.jsx";
 
-function Whiteboard({leftWidth, socket, username, roomId}) {
+function Whiteboard({leftWidth, socket}) {
     const [shapes, setShapes] = useState([]);
     const [boardDimension, setBoardDimension] = useState(null);
     const [tool, setTool] = useState('line');
     const [color, setColor] = useState('#ffffff');
     const [remoteUsers, setRemoteUsers] = useState({});
+    const {roomId} = useContext(joinRoomContext);
 
     const canvasContRef = useRef(null);
     const isDrawing = useRef(false);
@@ -19,7 +20,7 @@ function Whiteboard({leftWidth, socket, username, roomId}) {
     const yDocRef =useRef(new Y.Doc());
     const yShapesMap = yDocRef.current.getMap('yShapes');
     const lastShapeIdRef = useRef(null);
-    const awarenessRef = useRef(null);
+    // const awarenessRef = useRef(null);
 
     // update the shapeMap doc whenever a new shape is drawn
     const updateYShapesMap = (id, shape) => {
@@ -129,7 +130,7 @@ function Whiteboard({leftWidth, socket, username, roomId}) {
         }
 
         updateShapes();
-         yShapesMap.observe(updateShapes);
+        yShapesMap.observe(updateShapes);
 
         return () => {yShapesMap.unobserve(updateShapes)}
     }, []);
@@ -208,7 +209,7 @@ function Whiteboard({leftWidth, socket, username, roomId}) {
                     >
                         <Layer>
                             {/* render all the shapes */}
-                            {shapes.map(shape => <RenderShape shape={shape} />)}
+                            {shapes.map(shape => <RenderShape shape={shape} key={shape.id}/>)}
                         </Layer>
                     </Stage>
                 }

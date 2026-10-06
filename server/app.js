@@ -46,18 +46,6 @@ io.on('connection', socket => {
         // Send the current server document state matrix back to the joining client
         const currentDocState = Y.encodeStateAsUpdate(doc);
         socket.emit('init-doc-state', currentDocState);
-
-        // Pipe Awareness API events (cursors/presence) to other room members
-        // socket.on('awareness-update', (awarenessUpdate) => {
-        //     socket.to(roomId).emit('awareness-update', awarenessUpdate);
-        // });
-
-
-        // notify other team members in that room only
-        // socket.to(roomId).emit('user-joined', {
-        //     message: `${username} has joined the collaboration session`,
-        //     username: username
-        // });
     });
 
     // Handle incoming visual/structural updates to the Yjs Canvas document
